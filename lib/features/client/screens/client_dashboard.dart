@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:legal_case_manager/common/widgets/dashboard_widgets.dart';
 import 'package:legal_case_manager/features/profile/screens/profile_screen.dart';
-import 'package:legal_case_manager/features/profile/screens/edit_profile_screen.dart';
+import 'package:legal_case_manager/features/lawyer/screens/lawyer_list_screen.dart';
 import 'package:legal_case_manager/services/screens/service_category_screen.dart';
 
 class ClientDashboardScreen extends StatelessWidget {
@@ -32,7 +32,7 @@ class ClientDashboardScreen extends StatelessWidget {
 
             /// ✅ LAWYER CATEGORIES (GRID – NOT ROW)
             _sectionTitle('Lawyers'),
-            _lawyerCategoryGrid(),
+            _lawyerCategoryGrid(context),
 
             const SizedBox(height: 24),
 
@@ -160,55 +160,95 @@ class ClientDashboardScreen extends StatelessWidget {
   }
 
   // ================= ✅ LAWYER CATEGORY GRID =================
-  Widget _lawyerCategoryGrid() {
-    final lawyers = [
-      ('Criminal', 'assets/images/criminal.png'),
-      ('Civil', 'assets/images/civil.png'),
-      ('Corporate', 'assets/images/corporate.png'),
-      ('Public Interest', 'assets/images/public.png'),
-      ('Immigration', 'assets/images/immigration.png'),
-      ('Property', 'assets/images/property.png'),
+  Widget _lawyerCategoryGrid(BuildContext context) {
+    final categories = [
+      {
+        'title': 'Criminal',
+        'image': 'assets/images/criminal.png',
+        'key': 'criminal',
+      },
+      {
+        'title': 'Civil',
+        'image': 'assets/images/civil.png',
+        'key': 'civil',
+      },
+      {
+        'title': 'Corporate',
+        'image': 'assets/images/corporate.png',
+        'key': 'corporate',
+      },
+      {
+        'title': 'Public Interest',
+        'image': 'assets/images/public.png',
+        'key': 'public',
+      },
+      {
+        'title': 'Immigration',
+        'image': 'assets/images/immigration.png',
+        'key': 'immigration',
+      },
+      {
+        'title': 'Property',
+        'image': 'assets/images/property.png',
+        'key': 'property',
+      },
     ];
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: lawyers.length,
+      itemCount: categories.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
         childAspectRatio: 0.85,
       ),
-      itemBuilder: (_, i) {
-        return Column(
-          children: [
-            Container(
-              height: 80,
-              width: 80,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+      itemBuilder: (context, i) {
+        final item = categories[i];
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => LawyerListScreen(
+                  specialization: item['key']!,
+                  title: '${item['title']} Lawyers',
+                ),
               ),
-              padding: const EdgeInsets.all(10),
-              child: Image.asset(
-                lawyers[i].$2,
-                fit: BoxFit.contain,
+            );
+          },
+          child: Column(
+            children: [
+              Container(
+                height: 80,
+                width: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(10),
+                child: Image.asset(
+                  item['image']!,
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              lawyers[i].$1,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 6),
+              Text(
+                item['title']!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
   }
+
 
   // ================= BOTTOM CATEGORY ROW =================
   // Widget _categoriesRow() {

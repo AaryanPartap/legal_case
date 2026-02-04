@@ -18,6 +18,7 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
   final TextEditingController _confirmPasswordController =
   TextEditingController();
 
+  String? _selectedSpecialization; // ✅ REQUIRED
   bool _obscurePassword = true;
 
   @override
@@ -37,6 +38,11 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
       return;
     }
 
+    if (_selectedSpecialization == null) {
+      _showError('Please select your specialization');
+      return;
+    }
+
     try {
       await AuthService().signUp(
         email: _emailController.text.trim(),
@@ -44,6 +50,7 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
         role: 'lawyer',
         name: _nameController.text.trim(),
         barCouncilId: _barIdController.text.trim(),
+        specialization: _selectedSpecialization,
       );
 
       if (!mounted) return;
@@ -73,14 +80,13 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// BACK BUTTON
-            Align(
-            alignment: Alignment.centerLeft,
-            child:
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-            ),
 
               const SizedBox(height: 20),
 
@@ -123,6 +129,54 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                 hint: 'Bar Council ID',
                 controller: _barIdController,
               ),
+              const SizedBox(height: 16),
+
+              /// ✅ SPECIALIZATION DROPDOWN
+              DropdownButtonFormField<String>(
+                initialValue: _selectedSpecialization,
+                items: const [
+                  DropdownMenuItem(
+                    value: 'criminal',
+                    child: Text('Criminal Lawyer'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'civil',
+                    child: Text('Civil Lawyer'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'corporate',
+                    child: Text('Corporate Lawyer'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Public',
+                    child: Text('Public Lawyer'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Immigration',
+                    child: Text('Immigration Lawyer'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Property',
+                    child: Text('Property Lawyer'),
+                  ),
+                ],
+                onChanged: (v) =>
+                    setState(() => _selectedSpecialization = v),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  labelText: 'Specialization',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 16),
 
               _inputField(

@@ -3,6 +3,7 @@ import 'package:legal_case_manager/features/client/screens/client_dashboard.dart
 import '../../../common/widgets/dashboard_widgets.dart';
 import 'package:legal_case_manager/features/profile/screens/profile_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:legal_case_manager/features/documentation/screens/documentation_screen.dart';
 
 class ServiceCategoryScreen extends StatelessWidget {
   final String title;
@@ -37,7 +38,7 @@ class ServiceCategoryScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             /// SUB SERVICES
-            _subServicesGrid(),
+            _subServicesGrid(context),
 
             const SizedBox(height: 24),
 
@@ -60,7 +61,7 @@ class ServiceCategoryScreen extends StatelessWidget {
   }
 
   // ================= SUB SERVICES =================
-  Widget _subServicesGrid() {
+  Widget _subServicesGrid(BuildContext context) {
     final services = [
       {
         'title': 'Business Setup',
@@ -80,7 +81,6 @@ class ServiceCategoryScreen extends StatelessWidget {
       },
     ];
 
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -91,37 +91,51 @@ class ServiceCategoryScreen extends StatelessWidget {
         crossAxisSpacing: 12,
         childAspectRatio: 0.9,
       ),
-      itemBuilder: (_, i) {
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                services[i]['icon'] as String,
-                height: 36,
-              ),
+      itemBuilder: (context, i) {
+        final title = services[i]['title'] as String;
 
-              const SizedBox(height: 8),
-              Text(
-                services[i]['title'] as String,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+        return InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (title == 'Documentation') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentationScreen(),
                 ),
-              ),
-
-            ],
+              );
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  services[i]['icon'] as String,
+                  height: 36,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
+
 
   Widget _recommendedLawyers() {
     return StreamBuilder<QuerySnapshot>(
