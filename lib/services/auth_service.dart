@@ -62,16 +62,18 @@ class AuthService {
     required User user,
     required String role,
   }) async {
-    final doc =
-    await _firestore.collection('users').doc(user.uid).get();
+    final ref = _firestore.collection('users').doc(user.uid);
+    final doc = await ref.get();
 
     if (!doc.exists) {
-      await _firestore.collection('users').doc(user.uid).set({
+      await ref.set({
         'uid': user.uid,
         'email': user.email,
+        'name': user.displayName ?? 'User', // ✅ REQUIRED
         'role': role,
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
   }
+
 }

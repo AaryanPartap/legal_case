@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:legal_case_manager/common/widgets/dashboard_widgets.dart';
+import 'package:legal_case_manager/features/profile/screens/profile_screen.dart';
+import 'package:legal_case_manager/features/profile/screens/edit_profile_screen.dart';
+import 'package:legal_case_manager/services/screens/service_category_screen.dart';
 
 class ClientDashboardScreen extends StatelessWidget {
   const ClientDashboardScreen({super.key});
@@ -8,11 +11,12 @@ class ClientDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F6FA),
-      bottomNavigationBar: _bottomNav(),
+      bottomNavigationBar: _bottomNav(context),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+
             /// HEADER + SEARCH (UNCHANGED)
             const DashboardHeader(),
             const SizedBox(height: 20),
@@ -115,23 +119,42 @@ class ClientDashboardScreen extends StatelessWidget {
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
         ),
-        itemBuilder: (_, i) {
-          return Column(
-            children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: Colors.white,
-                child: Icon(services[i].$2, color: Colors.blue),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                services[i].$1,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 11),
-              ),
-            ],
+        itemBuilder: (context, i) {
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ServiceCategoryScreen(
+                    title: services[i].$1,
+                  ),
+                ),
+              );
+            },
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    services[i].$2,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  services[i].$1,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           );
         },
+
       ),
     );
   }
@@ -144,7 +167,7 @@ class ClientDashboardScreen extends StatelessWidget {
       ('Corporate', 'assets/images/corporate.png'),
       ('Public Interest', 'assets/images/public.png'),
       ('Immigration', 'assets/images/immigration.png'),
-      ('Intellectual Property', 'assets/images/property.png'),
+      ('Property', 'assets/images/property.png'),
     ];
 
     return GridView.builder(
@@ -223,11 +246,17 @@ class ClientDashboardScreen extends StatelessWidget {
   // }
 
   // ================= BOTTOM NAV =================
-  Widget _bottomNav() {
+  Widget _bottomNav(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: 0,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
+      onTap: (index) {
+        if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
+        }
+      },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
         BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: ''),
@@ -236,3 +265,4 @@ class ClientDashboardScreen extends StatelessWidget {
     );
   }
 }
+
