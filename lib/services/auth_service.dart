@@ -31,6 +31,10 @@ class AuthService {
       'name': name,
       'role': role,
       'avatarInitial': name.isNotEmpty ? name[0].toUpperCase() : 'U',
+      // ✅ ADD THESE DEFAULTS
+      'cases': 0,
+      'rating': 0.0,
+      'about': '',
       'createdAt': FieldValue.serverTimestamp(),
     };
 

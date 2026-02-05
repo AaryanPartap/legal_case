@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../common/widgets/dashboard_widgets.dart';
+import '../../../features/lawyer/screens/lawyer_profile_screen.dart';
 
 class LawyerListScreen extends StatelessWidget {
   final String specialization;
@@ -74,79 +75,91 @@ class LawyerListScreen extends StatelessWidget {
                       childAspectRatio: 0.7,
                     ),
                     itemBuilder: (_, i) {
-                      final data =
-                      lawyers[i].data() as Map<String, dynamic>;
+                      final data = lawyers[i].data() as Map<String, dynamic>;
 
                       final name = data['name'] ?? 'Lawyer';
                       final verified = data['verified'] == true;
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade300,
-                                      borderRadius:
-                                      const BorderRadius.vertical(
-                                          top: Radius.circular(16)),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        name[0].toUpperCase(),
-                                        style: const TextStyle(
-                                          fontSize: 48,
-                                          fontWeight: FontWeight.bold,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LawyerProfileScreen(
+                                lawyerId: lawyers[i].id,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        borderRadius: const BorderRadius.vertical(
+                                          top: Radius.circular(16),
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          name[0].toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 48,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
 
-                                  if (verified)
-                                    const Positioned(
-                                      top: 8,
-                                      left: 8,
-                                      child: Icon(
-                                        Icons.verified,
-                                        color: Colors.blue,
+                                    if (verified)
+                                      const Positioned(
+                                        top: 8,
+                                        left: 8,
+                                        child: Icon(
+                                          Icons.verified,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
                                       ),
                                     ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      specialization.toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    specialization.toUpperCase(),
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
-                    },
+                    }
+                    ,
                   );
                 },
               ),

@@ -9,22 +9,22 @@ class FirestoreService {
   static const String _userCollection = 'users';
 
   // ================= CREATE USER =================
-  static Future<void> createUser({
-    required String uid,
-    required String email,
-    required String role, // 'client' | 'lawyer'
-    required String name,
-    String? barCouncilId, // only for lawyer
-  }) async {
-    await _firestore.collection(_userCollection).doc(uid).set({
-      'uid': uid,
-      'email': email,
-      'role': role,
-      'name': name,
-      'barCouncilId': barCouncilId,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-  }
+  // static Future<void> createUser({
+  //   required String uid,
+  //   required String email,
+  //   required String role, // 'client' | 'lawyer'
+  //   required String name,
+  //   String? barCouncilId, // only for lawyer
+  // }) async {
+  //   await _firestore.collection(_userCollection).doc(uid).set({
+  //     'uid': uid,
+  //     'email': email,
+  //     'role': role,
+  //     'name': name,
+  //     'barCouncilId': barCouncilId,
+  //     'createdAt': FieldValue.serverTimestamp(),
+  //   });
+  // }
 
   // ================= GET USER ROLE =================
   static Future<String> getUserRole(String uid) async {

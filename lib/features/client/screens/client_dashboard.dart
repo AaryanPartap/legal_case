@@ -250,40 +250,7 @@ class ClientDashboardScreen extends StatelessWidget {
   }
 
 
-  // ================= BOTTOM CATEGORY ROW =================
-  // Widget _categoriesRow() {
-  //   final categories = [
-  //     'Public Interest',
-  //     'Immigration',
-  //     'Intellectual Property',
-  //   ];
-  //
-  //   return SizedBox(
-  //     height: 100,
-  //     child: ListView.builder(
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: categories.length,
-  //       itemBuilder: (_, i) {
-  //         return Container(
-  //           width: 140,
-  //           margin: const EdgeInsets.only(right: 12),
-  //           padding: const EdgeInsets.all(12),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white,
-  //             borderRadius: BorderRadius.circular(16),
-  //           ),
-  //           child: Center(
-  //             child: Text(
-  //               categories[i],
-  //               textAlign: TextAlign.center,
-  //               style: const TextStyle(fontWeight: FontWeight.w600),
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
+
 
   // ================= BOTTOM NAV =================
   Widget _bottomNav(BuildContext context) {

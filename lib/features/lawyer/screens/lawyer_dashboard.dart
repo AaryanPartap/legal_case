@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:legal_case_manager/common/widgets/dashboard_widgets.dart';
+import 'new_requests_screen.dart';
 
 class LawyerDashboardScreen extends StatelessWidget {
   const LawyerDashboardScreen({super.key});
@@ -20,11 +23,11 @@ class LawyerDashboardScreen extends StatelessWidget {
               /// BANNER
               Container(
                 height: 130,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0B2B45),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: const [
                     Expanded(
@@ -43,12 +46,107 @@ class LawyerDashboardScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-
               _sectionTitle('Your Actions'),
-              _lawyerActions(),
+
+              GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                children: [
+                  _newRequestsCard(context),
+                  _actionCard('Active Cases', Icons.folder),
+                  _actionCard('Schedule', Icons.calendar_month),
+                  _actionCard('Earnings', Icons.account_balance_wallet),
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ================= NEW REQUESTS CARD =================
+  Widget _newRequestsCard(BuildContext context) {
+    final lawyerId = FirebaseAuth.instance.currentUser!.uid;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('booking_requests')
+          .where('lawyerId', isEqualTo: lawyerId)
+          .where('status', isEqualTo: 'pending')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NewRequestsScreen(),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.inbox, size: 36, color: Colors.blue),
+                    SizedBox(height: 10),
+                    Text('New Requests'),
+                  ],
+                ),
+                if (count > 0)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: CircleAvatar(
+                      radius: 10,
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ================= NORMAL ACTION CARD =================
+  Widget _actionCard(String title, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 36, color: Colors.blue),
+          const SizedBox(height: 10),
+          Text(title),
+        ],
       ),
     );
   }
@@ -66,44 +164,10 @@ class LawyerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _lawyerActions() {
-    final actions = [
-      ('New Requests', Icons.inbox),
-      ('Active Cases', Icons.folder),
-      ('Schedule', Icons.calendar_month),
-      ('Earnings', Icons.account_balance_wallet),
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: actions.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-      ),
-      itemBuilder: (_, i) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(actions[i].$2, size: 36, color: Colors.blue),
-            const SizedBox(height: 10),
-            Text(actions[i].$1),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _bottomNav() {
     return BottomNavigationBar(
       currentIndex: 0,
-      items: const [
+      items: [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
         BottomNavigationBarItem(icon: Icon(Icons.assignment), label: ''),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),

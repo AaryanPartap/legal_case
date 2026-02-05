@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../state/avatar_cache.dart';
 import 'package:legal_case_manager/features/profile/screens/profile_screen.dart';
-
+import 'package:legal_case_manager/features/lawyer/screens/lawyer_profile_edit_screen.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});
@@ -17,12 +17,37 @@ class DashboardHeader extends StatelessWidget {
       children: [
         /// AVATAR WITH LIVE UPDATE
         GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            );
+          onTap: () async {
+            final uid = FirebaseAuth.instance.currentUser!.uid;
+
+            final userDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(uid)
+                .get();
+
+            final role = userDoc['role'];
+
+            if (!context.mounted) return;
+
+            if (role == 'lawyer') {
+              // Lawyer opens lawyer-edit profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LawyerProfileEditScreen(lawyerId: uid),
+                ),
+              );
+            } else {
+              // Client opens normal profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(),
+                ),
+              );
+            }
           },
+
           child: ValueListenableBuilder<File?>(
             valueListenable: AvatarCache.notifier,
             builder: (context, avatar, _) {

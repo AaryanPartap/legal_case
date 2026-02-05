@@ -175,7 +175,10 @@ class ServiceCategoryScreen extends StatelessWidget {
 
             final name = data['name'] ?? 'Lawyer';
             final avatarUrl = data['avatarUrl'];
-            final experience = data['experience'] ?? 'Experienced';
+            final int experience = (data['experience'] is int)
+                ? data['experience']
+                : 0;
+
 
             return Container(
               decoration: BoxDecoration(
@@ -226,7 +229,7 @@ class ServiceCategoryScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          experience,
+                          '$experience+',
                           style: const TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
