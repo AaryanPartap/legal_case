@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../common/widgets/dashboard_widgets.dart';
-import '../../../features/lawyer/screens/lawyer_profile_screen.dart';
+import '../../../features/lawyer/screens/lawyer_profile_view_screen.dart';
 
 class LawyerListScreen extends StatelessWidget {
   final String specialization;
@@ -85,7 +85,7 @@ class LawyerListScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => LawyerProfileScreen(
+                              builder: (_) => LawyerProfileViewScreen(
                                 lawyerId: lawyers[i].id,
                               ),
                             ),

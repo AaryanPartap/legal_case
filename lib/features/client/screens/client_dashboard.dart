@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:legal_case_manager/common/widgets/dashboard_widgets.dart';
 import 'package:legal_case_manager/features/profile/screens/profile_screen.dart';
 import 'package:legal_case_manager/features/lawyer/screens/lawyer_list_screen.dart';
 import 'package:legal_case_manager/services/screens/service_category_screen.dart';
+import '../../chat/screens/chat_screen.dart'; // Import ChatScreen
 
 class ClientDashboardScreen extends StatelessWidget {
   const ClientDashboardScreen({super.key});
@@ -16,12 +19,11 @@ class ClientDashboardScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-
-            /// HEADER + SEARCH (UNCHANGED)
+            /// HEADER + SEARCH
             const DashboardHeader(),
             const SizedBox(height: 20),
 
-            /// ✅ FIXED BANNER
+            /// BANNER
             _banner(),
             const SizedBox(height: 24),
 
@@ -30,15 +32,64 @@ class ClientDashboardScreen extends StatelessWidget {
             _servicesGrid(),
             const SizedBox(height: 24),
 
-            /// ✅ LAWYER CATEGORIES (GRID – NOT ROW)
+            /// LAWYER CATEGORIES
             _sectionTitle('Lawyers'),
             _lawyerCategoryGrid(context),
-
             const SizedBox(height: 24),
 
-            /// BOTTOM CATEGORIES
-            // _categoriesRow(),
-            // const SizedBox(height: 20),
+            /// YOUR CONVERSATIONS SECTION
+            _sectionTitle('Your Conversations'),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('booking_requests')
+                  .where('clientId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text('No conversations found', textAlign: TextAlign.center),
+                  );
+                }
+                final lawyers = snapshot.data!.docs;
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: lawyers.length,
+                  itemBuilder: (context, i) {
+                    final data = lawyers[i].data() as Map<String, dynamic>;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.blue,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                        title: Text(
+                          data['lawyerName'] ?? 'Lawyer',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text('Tap to chat'),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatScreen(
+                              otherUserId: data['lawyerId'],
+                              otherUserName: data['lawyerName'] ?? 'Lawyer',
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -70,6 +121,7 @@ class ClientDashboardScreen extends StatelessWidget {
             'assets/images/layer1.png',
             height: 90,
             fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, size: 50, color: Colors.white),
           ),
         ],
       ),
@@ -154,44 +206,19 @@ class ClientDashboardScreen extends StatelessWidget {
             ),
           );
         },
-
       ),
     );
   }
 
-  // ================= ✅ LAWYER CATEGORY GRID =================
+  // ================= LAWYER CATEGORY GRID =================
   Widget _lawyerCategoryGrid(BuildContext context) {
     final categories = [
-      {
-        'title': 'Criminal',
-        'image': 'assets/images/criminal.png',
-        'key': 'criminal',
-      },
-      {
-        'title': 'Civil',
-        'image': 'assets/images/civil.png',
-        'key': 'civil',
-      },
-      {
-        'title': 'Corporate',
-        'image': 'assets/images/corporate.png',
-        'key': 'corporate',
-      },
-      {
-        'title': 'Public Interest',
-        'image': 'assets/images/public.png',
-        'key': 'public',
-      },
-      {
-        'title': 'Immigration',
-        'image': 'assets/images/immigration.png',
-        'key': 'immigration',
-      },
-      {
-        'title': 'Property',
-        'image': 'assets/images/property.png',
-        'key': 'property',
-      },
+      {'title': 'Criminal', 'image': 'assets/images/criminal.png', 'key': 'criminal'},
+      {'title': 'Civil', 'image': 'assets/images/civil.png', 'key': 'civil'},
+      {'title': 'Corporate', 'image': 'assets/images/corporate.png', 'key': 'corporate'},
+      {'title': 'Public Interest', 'image': 'assets/images/public.png', 'key': 'public'},
+      {'title': 'Immigration', 'image': 'assets/images/immigration.png', 'key': 'immigration'},
+      {'title': 'Property', 'image': 'assets/images/property.png', 'key': 'property'},
     ];
 
     return GridView.builder(
@@ -206,7 +233,6 @@ class ClientDashboardScreen extends StatelessWidget {
       ),
       itemBuilder: (context, i) {
         final item = categories[i];
-
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -232,6 +258,7 @@ class ClientDashboardScreen extends StatelessWidget {
                 child: Image.asset(
                   item['image']!,
                   fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.blue),
                 ),
               ),
               const SizedBox(height: 6),
@@ -249,9 +276,6 @@ class ClientDashboardScreen extends StatelessWidget {
     );
   }
 
-
-
-
   // ================= BOTTOM NAV =================
   Widget _bottomNav(BuildContext context) {
     return BottomNavigationBar(
@@ -265,11 +289,10 @@ class ClientDashboardScreen extends StatelessWidget {
         }
       },
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Categories'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
   }
 }
-

@@ -286,37 +286,7 @@ class _LawyerProfileScreenState extends State<LawyerProfileScreen> {
     );
   }
 
-  // Future<void> openLawyerProfile(
-  //     BuildContext context,
-  //     String lawyerId,
-  //     ) async {
-  //   final uid = FirebaseAuth.instance.currentUser!.uid;
-  //
-  //   final userDoc = await FirebaseFirestore.instance
-  //       .collection('users')
-  //       .doc(uid)
-  //       .get();
-  //
-  //   final role = userDoc['role'];
-  //
-  //   if (role == 'lawyer' && uid == lawyerId) {
-  //     // Lawyer opening own profile
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (_) => LawyerProfileEditScreen(lawyerId: lawyerId),
-  //       ),
-  //     );
-  //   } else {
-  //     // Client viewing lawyer
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (_) => LawyerProfileViewScreen(lawyerId: lawyerId),
-  //       ),
-  //     );
-  //   }
-  // }
+
 
 
   Widget _sectionTitle(String title) {

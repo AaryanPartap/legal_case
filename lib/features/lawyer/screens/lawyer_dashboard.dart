@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:legal_case_manager/common/widgets/dashboard_widgets.dart';
 import 'new_requests_screen.dart';
+import '../../../features/lawyer/screens/lawyer_profile_edit_screen.dart';
 
 class LawyerDashboardScreen extends StatelessWidget {
   const LawyerDashboardScreen({super.key});
@@ -11,7 +12,7 @@ class LawyerDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F6FA),
-      bottomNavigationBar: _bottomNav(),
+      bottomNavigationBar: _bottomNav(context),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -164,12 +165,20 @@ class LawyerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _bottomNav() {
+  Widget _bottomNav(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: 0,
-      items: [
+      onTap: (index) {
+        if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LawyerProfileEditScreen(lawyerId: '',)),
+          );
+        }
+      },
+      items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.assignment), label: ''),
+        BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: ''),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
       ],
     );

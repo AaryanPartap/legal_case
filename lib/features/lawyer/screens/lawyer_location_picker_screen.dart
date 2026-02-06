@@ -10,6 +10,7 @@ import '../../../common/state/avatar_cache.dart';
 
 class LawyerProfileEditScreen extends StatefulWidget {
   final String lawyerId;
+
   const LawyerProfileEditScreen({super.key, required this.lawyerId});
 
   @override
@@ -22,10 +23,12 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
   final _addressController = TextEditingController();
 
   File? _image;
-  double? _officeLat;
-  double? _officeLng;
   bool _removeAvatar = false;
   bool _isLoading = false;
+
+  // Track coordinates locally so we can save them for the client's map
+  double? _officeLat;
+  double? _officeLng;
 
   @override
   void initState() {
@@ -52,7 +55,7 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // ---------------- IMAGE METHODS ----------------
+  // ---------------- IMAGE PICKER ----------------
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (picked != null) {
@@ -63,7 +66,7 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
     }
   }
 
-  // ---------------- LOCATION METHODS ----------------
+  // ---------------- GPS LOCATION DETECTION ----------------
   Future<void> _detectLocation() async {
     setState(() => _isLoading = true);
     try {
@@ -74,7 +77,8 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
 
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
-      final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18');
+      final url = Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18');
       final response = await http.get(url, headers: {'User-Agent': 'legal_case_manager'});
 
       if (response.statusCode == 200) {
@@ -92,14 +96,17 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
     }
   }
 
-  // ---------------- SAVE ALL ----------------
+  // ---------------- SAVE ALL CHANGES ----------------
   Future<void> _saveChanges() async {
     setState(() => _isLoading = true);
     try {
       final user = FirebaseAuth.instance.currentUser!;
       String manualAddress = _addressController.text.trim();
 
-      // Attempt to Geocode if the address was typed manually
+      double? finalLat = _officeLat;
+      double? finalLng = _officeLng;
+
+      // Geocoding: If the user typed an address manually, try to get coordinates for the map
       if (manualAddress.isNotEmpty) {
         try {
           final query = Uri.encodeComponent(manualAddress);
@@ -109,28 +116,29 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
           if (response.statusCode == 200) {
             final List data = json.decode(response.body);
             if (data.isNotEmpty) {
-              _officeLat = double.parse(data[0]['lat']);
-              _officeLng = double.parse(data[0]['lon']);
+              finalLat = double.parse(data[0]['lat']);
+              finalLng = double.parse(data[0]['lon']);
             }
           }
         } catch (e) {
-          debugPrint("Manual Geocoding failed: $e");
+          debugPrint("Geocoding failed, using last known coordinates: $e");
         }
       }
 
-      Map<String, dynamic> updates = {
+      // 1. Update Firestore
+      await FirebaseFirestore.instance.collection('users').doc(widget.lawyerId).update({
         'name': _nameController.text.trim(),
         'officeAddress': manualAddress,
-        'officeLat': _officeLat,
-        'officeLng': _officeLng,
-      };
+        'officeLat': finalLat,
+        'officeLng': finalLng,
+      });
 
-      await FirebaseFirestore.instance.collection('users').doc(widget.lawyerId).update(updates);
-
+      // 2. Update Password if provided
       if (_passwordController.text.trim().length >= 6) {
         await user.updatePassword(_passwordController.text.trim());
       }
 
+      // 3. Sync Avatar Cache
       if (_removeAvatar) {
         AvatarCache.image = null;
       } else if (_image != null) {
@@ -138,7 +146,7 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
       }
 
       _toast("Profile updated successfully");
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     } catch (e) {
       _toast("Update failed: $e");
     } finally {
@@ -155,6 +163,7 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
           : ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          // Avatar
           Center(
             child: Stack(
               alignment: Alignment.topRight,
@@ -165,30 +174,39 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
                     radius: 50,
                     backgroundColor: Colors.blue.shade100,
                     backgroundImage: _image != null ? FileImage(_image!) : null,
-                    child: _image == null ? const Icon(Icons.camera_alt, size: 40) : null,
+                    child: _image == null ? const Icon(Icons.person, size: 50) : null,
                   ),
                 ),
                 if (_image != null)
-                  IconButton(
-                    icon: const Icon(Icons.cancel, color: Colors.red),
-                    onPressed: () => setState(() { _image = null; _removeAvatar = true; }),
+                  Positioned(
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => setState(() { _image = null; _removeAvatar = true; }),
+                      child: const CircleAvatar(
+                        radius: 14,
+                        backgroundColor: Colors.red,
+                        child: Icon(Icons.close, size: 16, color: Colors.white),
+                      ),
+                    ),
                   )
               ],
             ),
           ),
           const SizedBox(height: 30),
+
           TextField(
             controller: _nameController,
             decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
+
           const Text("Office Location", style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           TextField(
             controller: _addressController,
-            maxLines: 3,
+            maxLines: 2,
             decoration: InputDecoration(
-              hintText: 'Enter address manually or use GPS',
+              hintText: 'Enter address manually or use GPS icon',
               border: const OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.my_location, color: Colors.blue),
@@ -197,12 +215,14 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
             ),
           ),
           const SizedBox(height: 20),
+
           TextField(
             controller: _passwordController,
             obscureText: true,
             decoration: const InputDecoration(labelText: 'New Password (Optional)', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 30),
+
           SizedBox(
             height: 50,
             child: ElevatedButton(

@@ -10,15 +10,18 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   int _completionPercent(Map<String, dynamic> data) {
-    int total = 4;
+    int total = 5; // Name, Email, Role, BarId, OfficeAddress
     int filled = 0;
 
-    if ((data['name'] ?? '').toString().isNotEmpty) filled++;
-    if ((data['email'] ?? '').toString().isNotEmpty) filled++;
-    if ((data['role'] ?? '').toString().isNotEmpty) filled++;
-    if (data['role'] == 'lawyer' &&
-        (data['barCouncilId'] ?? '').toString().isNotEmpty) {
-      filled++;
+    if ((data['name'] ?? '').isNotEmpty) filled++;
+    if ((data['email'] ?? '').isNotEmpty) filled++;
+    if ((data['role'] ?? '').isNotEmpty) filled++;
+
+    if (data['role'] == 'lawyer') {
+      if ((data['barCouncilId'] ?? '').isNotEmpty) filled++;
+      if ((data['officeAddress'] ?? '').isNotEmpty) filled++;
+    } else {
+      total = 3; // Client requirements
     }
 
     return ((filled / total) * 100).toInt();

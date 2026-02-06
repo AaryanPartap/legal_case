@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/auth_service.dart'; // For Email Signup
+import '../../../services/google_auth_service.dart' as google_auth; // For Google
 import 'package:legal_case_manager/features/auth/screens/entry_choice_screen.dart';
 import 'package:legal_case_manager/features/client/screens/client_dashboard.dart';
 import 'package:legal_case_manager/services/auth_service.dart';
