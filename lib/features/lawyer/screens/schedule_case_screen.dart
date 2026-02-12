@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:legal_case_manager/services/notification_service.dart';
 
 class ScheduleCaseScreen extends StatefulWidget {
   final String caseId;
@@ -16,7 +17,7 @@ class _ScheduleCaseScreenState extends State<ScheduleCaseScreen> {
   Future<void> _saveSchedule() async {
     if (_selectedDate == null || _selectedTime == null) return;
 
-    final scheduledDateTime = DateTime(
+    final finalScheduledDateTime = DateTime(
       _selectedDate!.year,
       _selectedDate!.month,
       _selectedDate!.day,
@@ -24,19 +25,32 @@ class _ScheduleCaseScreenState extends State<ScheduleCaseScreen> {
       _selectedTime!.minute,
     );
 
-    await FirebaseFirestore.instance
-        .collection('booking_requests')
-        .doc(widget.caseId)
-        .update({
-      'scheduledDate': Timestamp.fromDate(scheduledDateTime),
-      'notificationSent': false,
-    });
+    try {
+      // 1. Update Firestore
+      await FirebaseFirestore.instance
+          .collection('booking_requests')
+          .doc(widget.caseId)
+          .update({
+        'scheduledDate': Timestamp.fromDate(finalScheduledDateTime),
+        'status': 'scheduled',
+      });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Case scheduled successfully!")),
+      // 2. Schedule the Alarm on the phone
+      // We use the document ID's hash as a unique notification ID
+      await NotificationService.scheduleAlarm(
+        widget.caseId.hashCode,
+        "Case Appointment",
+        finalScheduledDateTime,
       );
-      Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Scheduled and Alarm Set!")),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      debugPrint("Scheduling Error: $e");
     }
   }
 
@@ -99,4 +113,7 @@ class _ScheduleCaseScreenState extends State<ScheduleCaseScreen> {
       ),
     );
   }
+
+
+
 }

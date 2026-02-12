@@ -46,7 +46,12 @@ dependencies:
   http: ^1.2.0
   url_launcher: ^6.2.5
   intl: ^0.19.0
-
+    # Remove razorpay_flutter
+  phonepe_payment_sdk: ^3.0.0 # Add this
+  crypto: ^3.0.3 # Required for generating checksums
+  flutter_rating_bar: ^4.0.1
+  flutter_local_notifications: ^17.2.0
+  timezone: ^0.9.4
 
 dev_dependencies:
   flutter_test:

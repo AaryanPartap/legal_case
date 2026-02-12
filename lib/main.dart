@@ -5,12 +5,15 @@ import 'package:legal_case_manager/features/onboarding/screens/onboarding_screen
 import 'firebase_options.dart';
 import 'features/auth/screens/client_login_screen.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await NotificationService.init();
   runApp(const LegalCaseApp());
 }
 

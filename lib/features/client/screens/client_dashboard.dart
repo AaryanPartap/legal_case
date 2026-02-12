@@ -54,14 +54,19 @@ class ClientDashboardScreen extends StatelessWidget {
                     child: Text('No conversations found', textAlign: TextAlign.center),
                   );
                 }
-                final lawyers = snapshot.data!.docs;
+                final requests = snapshot.data!.docs;
+                final uniqueLawyerIds = <String>{};
+                final filteredLawyers = requests.where((doc) {
+                  final lawyerId = (doc.data() as Map<String, dynamic>)['lawyerId'];
+                  return uniqueLawyerIds.add(lawyerId); // Only returns true if ID was not already in the set
+                }).toList();
 
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: lawyers.length,
+                  itemCount: filteredLawyers.length,
                   itemBuilder: (context, i) {
-                    final data = lawyers[i].data() as Map<String, dynamic>;
+                    final data = filteredLawyers[i].data() as Map<String, dynamic>;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
