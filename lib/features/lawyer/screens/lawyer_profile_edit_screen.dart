@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../../../common/state/avatar_cache.dart';
+import 'package:legal_case_manager/features/lawyer/screens/lawyer_portfolio_editor.dart';
 
 class LawyerProfileEditScreen extends StatefulWidget {
   final String lawyerId;
@@ -202,6 +203,27 @@ class _LawyerProfileEditScreenState extends State<LawyerProfileEditScreen> {
             obscureText: true,
             decoration: const InputDecoration(labelText: 'New Password (Optional)', border: OutlineInputBorder()),
           ),
+
+          // Add this inside the ListView in your build method, before the 'Save Profile' button
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              side: const BorderSide(color: Colors.blue),
+            ),
+            icon: const Icon(Icons.description),
+            label: const Text('Manage Professional Portfolio'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LawyerPortfolioEditor(lawyerId: widget.lawyerId),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+
           const SizedBox(height: 30),
           SizedBox(
             height: 50,
