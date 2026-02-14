@@ -9,6 +9,8 @@ import '../../../features/lawyer/screens/active_cases_screen.dart';
 import 'schedule_view_screen.dart';
 import 'package:legal_case_manager/features/lawyer/screens/cases_history_screen.dart';
 import 'package:legal_case_manager/features/lawyer/screens/earnings_screen.dart';
+import 'package:legal_case_manager/features/chat/screens/chat_screen.dart';
+
 
 
 class LawyerDashboardScreen extends StatelessWidget {
@@ -103,8 +105,15 @@ class LawyerDashboardScreen extends StatelessWidget {
                     ),
                     child: _actionCard('Earnings', Icons.account_balance_wallet),
                   ),
+
+
                 ],
+
+
               ),
+              const SizedBox(height: 24),
+              _sectionTitle('Your Conversations'),
+              _conversationsSection(),
             ],
           ),
         ),
@@ -201,6 +210,74 @@ class LawyerDashboardScreen extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+
+  Widget _conversationsSection() {
+    final lawyerId = FirebaseAuth.instance.currentUser!.uid;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('booking_requests')
+          .where('lawyerId', isEqualTo: lawyerId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No conversations yet."));
+        }
+
+        // ✅ LOGIC: Filter unique clients to avoid duplicates
+        final allDocs = snapshot.data!.docs;
+        final seenClientIds = <String>{};
+        final uniqueChats = allDocs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return seenClientIds.add(data['clientId'] ?? '');
+        }).toList();
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: uniqueChats.length,
+          itemBuilder: (context, index) {
+            final data = uniqueChats[index].data() as Map<String, dynamic>;
+            final String clientName = data['clientName'] ?? 'Client';
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        otherUserId: data['clientId'],
+                        otherUserName: clientName,
+                      ),
+                    ),
+                  );
+                },
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue.shade100,
+                  child: Text(
+                    clientName.isNotEmpty ? clientName[0].toUpperCase() : 'C',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                  ),
+                ),
+                title: Text(
+                  clientName, // ✅ Ensure you use the _capitalize helper if desired
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text("Tap to chat"),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../state/avatar_cache.dart';
 import 'package:legal_case_manager/features/profile/screens/profile_screen.dart';
 import 'package:legal_case_manager/features/lawyer/screens/lawyer_profile_edit_screen.dart';
+import 'package:legal_case_manager/features/lawyer/screens/new_requests_screen.dart';
+import 'package:legal_case_manager/features/lawyer/screens/lawyer_conversation_screen.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});
@@ -112,11 +114,24 @@ class DashboardHeader extends StatelessWidget {
 
         IconButton(
           icon: const Icon(Icons.notifications_none),
-          onPressed: () {},
+          onPressed: () {
+            // Navigates to the screen where new booking requests are listed
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NewRequestsScreen()),
+            );
+          },
         ),
+
         IconButton(
           icon: const Icon(Icons.chat_bubble_outline),
-          onPressed: () {},
+          onPressed: () {
+            // Navigates to a dedicated screen to view all active conversations
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LawyerConversationsScreen()),
+            );
+          },
         ),
       ],
     );
