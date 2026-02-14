@@ -116,26 +116,53 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
     );
   }
 
-// Update your payment success logic to save to Firestore
-//   void _onPaymentSuccess(String txId, int amount, String hearingType) async {
-//     final user = FirebaseAuth.instance.currentUser!;
-//
-//     await FirebaseFirestore.instance
-//         .collection('users')
-//         .doc(widget.lawyerId)
-//         .collection('earnings')
-//         .add({
-//       'amount': amount,
-//       'hearingType': hearingType,
-//       'clientName': user.displayName ?? "Client",
-//       'timestamp': FieldValue.serverTimestamp(),
-//       'transactionId': txId,
-//     });
-//
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(content: Text("Payment Successful! Earning logged."), backgroundColor: Colors.green),
-//     );
-//   }
+  void _showSuccessDialog(BuildContext context, String txId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User must click the button to close
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green, size: 80),
+            const SizedBox(height: 16),
+            const Text(
+              "Booking Successful!",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Your request has been sent to the lawyer. You can track the status in your notifications.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Transaction ID: $txId",
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.blueGrey),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Close Success Dialog
+                Navigator.pop(context); // Go back to the previous screen (Lawyer List/Dashboard)
+              },
+              child: const Text("Back to Dashboard", style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ✅ This logs the virtual payment to the lawyer's earnings sub-collection
   void _onPaymentSuccess(String txId, int amount, String hearingType) async {
@@ -451,6 +478,7 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
   // Inside lib/features/lawyer/screens/lawyer_profile_view_screen.dart
 
   // ✅ 1. Integrated Booking Dialog with Hearing Selection
+  // ✅ Step 1: Selection Dialog
   Future<void> _showBookingDialog(BuildContext context, Map<String, dynamic> lawyerData) async {
     final TextEditingController descriptionController = TextEditingController();
     String? selectedHearing;
@@ -458,9 +486,9 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder( // ✅ Allows radio button updates inside dialog
+      builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Book Case & Select Hearing"),
+          title: const Text("Describe Case & Select Hearing"),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -469,7 +497,7 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
                   controller: descriptionController,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    hintText: "Enter a brief description of your legal issue...",
+                    hintText: "Briefly describe your legal issue...",
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -509,20 +537,67 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
                   return;
                 }
 
-                // ✅ Trigger integrated booking and virtual payment
-                _bookLawyerWithPayment(
+                // ✅ Close selection dialog and open Review Dialog
+                Navigator.pop(context);
+                _showReviewDialog(
                     context,
                     lawyerData,
                     descriptionController.text.trim(),
                     selectedHearing!,
                     amount
                 );
-                Navigator.pop(context);
               },
-              child: const Text("Confirm Booking"),
+              child: const Text("Next: Review"),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+// ✅ Step 2: Final Review & Confirmation Dialog
+  void _showReviewDialog(BuildContext context, Map<String, dynamic> lawyerData, String description, String hearingType, int amount) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Review Your Booking"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _reviewRow("Lawyer", lawyerData['name'] ?? 'Lawyer'),
+            _reviewRow("Hearing", hearingType),
+            _reviewRow("Total Amount", "₹$amount (Virtual)"),
+            const SizedBox(height: 12),
+            const Text("Case Description:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(description, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Go Back")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () {
+              _bookLawyerWithPayment(context, lawyerData, description, hearingType, amount);
+              Navigator.pop(context); // Close review dialog
+            },
+            child: const Text("Confirm & Book", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+// Simple Helper for the Review UI
+  Widget _reviewRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("$label:", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(value, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
@@ -534,9 +609,10 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
       String description,
       String hearingType,
       int amount) async {
-
     final user = FirebaseAuth.instance.currentUser!;
-    final String txId = "VIRT_TXN${DateTime.now().millisecondsSinceEpoch}";
+    final String txId = "VIRT_TXN${DateTime
+        .now()
+        .millisecondsSinceEpoch}";
 
     try {
       // 1. Log Case Details in booking_requests
@@ -567,15 +643,12 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
       });
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text("Booking confirmed with ₹$amount $hearingType"),
-                backgroundColor: Colors.green
-            )
-        );
+        // ✅ Trigger the Success Popup
+        _showSuccessDialog(context, txId);
       }
     } catch (e) {
       debugPrint("Booking Error: $e");
+      _onPaymentError("Failed to book: $e");
     }
   }
 
