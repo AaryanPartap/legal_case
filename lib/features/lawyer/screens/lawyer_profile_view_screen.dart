@@ -653,7 +653,7 @@ class _LawyerProfileViewScreenState extends State<LawyerProfileViewScreen> {
       if (context.mounted) Navigator.pop(context);
 
       if (context.mounted) {
-        // ✅ SUCCESS POPUP NOW TRIGGERS AFTER SUCCESSFUL WRITE
+        // ✅ SUCCESS POPUP NOW TRIGGERS AFTER SUCCESSFUL WRITE224
         _showSuccessDialog(context, txId);
       }
     } catch (e) {
