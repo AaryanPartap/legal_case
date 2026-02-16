@@ -6,96 +6,104 @@ import 'package:legal_case_manager/features/profile/screens/profile_screen.dart'
 import 'package:legal_case_manager/features/lawyer/screens/lawyer_list_screen.dart';
 import 'package:legal_case_manager/services/screens/service_category_screen.dart';
 import '../../chat/screens/chat_screen.dart'; // Import ChatScreen
+import 'package:legal_case_manager/features/chat/screens/legal_chatbot_screen.dart';
+import 'package:legal_case_manager/common/widgets/movable_ai_button.dart';
 
 class ClientDashboardScreen extends StatelessWidget {
   const ClientDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF1F6FA),
-      bottomNavigationBar: _bottomNav(context),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            /// HEADER + SEARCH
-            const DashboardHeader(),
-            const SizedBox(height: 20),
+    return MovableAIButton(
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF1F6FA),
+        bottomNavigationBar: _bottomNav(context),
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              /// HEADER + SEARCH
+              const DashboardHeader(),
+              const SizedBox(height: 20),
 
-            /// BANNER
-            _banner(),
-            const SizedBox(height: 24),
 
-            /// SERVICES
-            _sectionTitle('Services'),
-            _servicesGrid(),
-            const SizedBox(height: 24),
+              /// BANNER
+              _banner(),
+              const SizedBox(height: 24),
 
-            /// LAWYER CATEGORIES
-            _sectionTitle('Lawyers'),
-            _lawyerCategoryGrid(context),
-            const SizedBox(height: 24),
 
-            /// YOUR CONVERSATIONS SECTION
-            _sectionTitle('Your Conversations'),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('booking_requests')
-                  .where('clientId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text('No conversations found', textAlign: TextAlign.center),
-                  );
-                }
-                final requests = snapshot.data!.docs;
-                final uniqueLawyerIds = <String>{};
-                final filteredLawyers = requests.where((doc) {
-                  final lawyerId = (doc.data() as Map<String, dynamic>)['lawyerId'];
-                  return uniqueLawyerIds.add(lawyerId); // Only returns true if ID was not already in the set
-                }).toList();
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredLawyers.length,
-                  itemBuilder: (context, i) {
-                    final data = filteredLawyers[i].data() as Map<String, dynamic>;
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: Colors.blue,
-                          child: Icon(Icons.person, color: Colors.white),
-                        ),
-                        title: Text(
-                          data['lawyerName'] ?? 'Lawyer',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: const Text('Tap to chat'),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatScreen(
-                              otherUserId: data['lawyerId'],
-                              otherUserName: data['lawyerName'] ?? 'Lawyer',
+
+              /// SERVICES
+              _sectionTitle('Services'),
+              _servicesGrid(),
+              const SizedBox(height: 24),
+
+              /// LAWYER CATEGORIES
+              _sectionTitle('Lawyers'),
+              _lawyerCategoryGrid(context),
+              const SizedBox(height: 24),
+
+              /// YOUR CONVERSATIONS SECTION
+              _sectionTitle('Your Conversations'),
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('booking_requests')
+                    .where('clientId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text('No conversations found', textAlign: TextAlign.center),
+                    );
+                  }
+                  final requests = snapshot.data!.docs;
+                  final uniqueLawyerIds = <String>{};
+                  final filteredLawyers = requests.where((doc) {
+                    final lawyerId = (doc.data() as Map<String, dynamic>)['lawyerId'];
+                    return uniqueLawyerIds.add(lawyerId); // Only returns true if ID was not already in the set
+                  }).toList();
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredLawyers.length,
+                    itemBuilder: (context, i) {
+                      final data = filteredLawyers[i].data() as Map<String, dynamic>;
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.blue,
+                            child: Icon(Icons.person, color: Colors.white),
+                          ),
+                          title: Text(
+                            data['lawyerName'] ?? 'Lawyer',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: const Text('Tap to chat'),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatScreen(
+                                otherUserId: data['lawyerId'],
+                                otherUserName: data['lawyerName'] ?? 'Lawyer',
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
