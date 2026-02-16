@@ -1,0 +1,28 @@
+{
+  "name": "notes-frontend",
+  "version": "1.0.0",
+  "description": "A simple notes application built with React and TypeScript.",
+  "main": "src/main.tsx",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "keywords": [
+    "notes",
+    "react",
+    "typescript"
+  ],
+  "author": "Harshit6057",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "vite": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0"
+  }
+}
