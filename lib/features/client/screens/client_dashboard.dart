@@ -10,6 +10,9 @@ import 'package:legal_case_manager/common/widgets/movable_ai_button.dart';
 import 'package:legal_case_manager/features/client/screens/client_case_notes_view.dart';
 import 'package:legal_case_manager/features/client/screens/all_lawyer_categories_screen.dart';
 import 'package:legal_case_manager/features/client/screens/explore_search_screen.dart';
+import 'package:legal_case_manager/features/client/screens/affidavit_info_screen.dart';
+import 'package:legal_case_manager/features/client/screens/documentataion_screen.dart';
+import 'package:legal_case_manager/features/chat/screens/legal_chatbot_screen.dart';
 
 
 
@@ -296,8 +299,38 @@ class ClientDashboardScreen extends StatelessWidget {
           childAspectRatio: 1,
         ),
         itemBuilder: (context, i) {
+          final serviceTitle = services[i].$1;
+
           return GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceCategoryScreen(title: services[i].$1))),
+            onTap: () {
+              if (serviceTitle == 'Advice') {
+                // ✅ Redirect to Chatbot Screen
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LegalChatbotScreen()));
+              }
+              else if (serviceTitle == 'Consultant') {
+                // ✅ Redirect to Lawyers (Specialists Category Screen)
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AllLawyerCategoriesScreen()));
+              }
+              else if (serviceTitle == 'Disputes') {
+                // ✅ Redirect to Criminal Lawyers (Disputes)
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LawyerListScreen(
+                    specialization: 'criminal',
+                    title: 'Criminal Disputes'
+                )));
+              }
+              else if (serviceTitle == 'Info') {
+                // ✅ Redirect to Affidavits Download/Share Screen
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AffidavitInfoScreen()));
+              }
+              else if (serviceTitle == 'Docs') {
+                // ✅ Redirect to existing Documentation Screen
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentationScreen()));
+              }
+              else {
+                // Default redirection for other services
+                Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceCategoryScreen(title: serviceTitle)));
+              }
+            },
             child: Column(
               children: [
                 Container(
@@ -306,7 +339,7 @@ class ClientDashboardScreen extends StatelessWidget {
                   child: Icon(services[i].$2, color: Colors.white, size: 24),
                 ),
                 const SizedBox(height: 8),
-                Text(services[i].$1,
+                Text(serviceTitle,
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

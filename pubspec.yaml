@@ -55,6 +55,11 @@ dependencies:
   google_generative_ai: ^0.4.7
   firebase_app_check: ^0.2.2+7
 
+
+  share_plus: ^10.0.0    # ✅ Add this
+  path_provider: ^2.1.3 # ✅ Add this
+  file_picker: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -83,6 +88,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/images/
+    - assets/doc/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
