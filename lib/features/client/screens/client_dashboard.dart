@@ -8,6 +8,7 @@ import 'package:legal_case_manager/services/screens/service_category_screen.dart
 import '../../chat/screens/chat_screen.dart'; // Import ChatScreen
 import 'package:legal_case_manager/features/chat/screens/legal_chatbot_screen.dart';
 import 'package:legal_case_manager/common/widgets/movable_ai_button.dart';
+import 'package:legal_case_manager/features/client/screens/client_case_notes_view.dart';
 
 class ClientDashboardScreen extends StatelessWidget {
   const ClientDashboardScreen({super.key});
@@ -73,7 +74,16 @@ class ClientDashboardScreen extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: filteredLawyers.length,
                     itemBuilder: (context, i) {
-                      final data = filteredLawyers[i].data() as Map<String, dynamic>;
+                      // 1. First, define the document
+                      final doc = filteredLawyers[i];
+
+                      // 2. Second, define the data map from that document
+                      final data = doc.data() as Map<String, dynamic>;
+
+                      // 3. Define the variables you need
+                      final String lawyerName = data['lawyerName'] ?? 'Lawyer';
+                      final String lawyerId = data['lawyerId'] ?? '';
+                      final String caseId = doc.id; // ✅ This fixes the 'requestId' or 'caseId' error
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -96,7 +106,25 @@ class ClientDashboardScreen extends StatelessWidget {
                               ),
                             ),
                           ),
+
+                            trailing: TextButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ClientCaseNotesView(
+                                          caseId: caseId,
+                                          lawyerName: lawyerName,
+                                        ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.description_outlined, size: 18),
+                              label: const Text("Notes"),
+                              style: TextButton.styleFrom(foregroundColor: Colors.blue),
                         ),
+                        )
                       );
                     },
                   );

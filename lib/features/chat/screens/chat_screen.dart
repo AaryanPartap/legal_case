@@ -27,7 +27,8 @@ class ChatScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(otherUserName), backgroundColor: Colors.blue),
-      body: Column(
+        body: SafeArea(
+          child: Column(
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -127,6 +128,7 @@ class ChatScreen extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
