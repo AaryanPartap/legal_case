@@ -13,49 +13,52 @@ class ServiceCategoryScreen extends StatelessWidget {
     required this.title,
   });
 
+  final Color primaryDark = const Color(0xFF0F172A);
+  final Color accentBlue = const Color(0xFF2563EB);
+  final Color backgroundSlate = const Color(0xFFF8FAFC);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F6FA),
+      backgroundColor: backgroundSlate,
       bottomNavigationBar: _bottomNav(context),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           children: [
+            const SizedBox(height: 10),
             const DashboardHeader(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             /// CATEGORY TITLE
-            Text(
-              title.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-
+            _sectionTitle(title.toUpperCase()),
             const SizedBox(height: 16),
 
             /// SUB SERVICES
             _subServicesGrid(context),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 30),
 
             /// RECOMMENDED LAWYERS
-            const Text(
-              'Recommended Lawyers',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
+            _sectionTitle('Recommended Lawyers'),
+            const SizedBox(height: 16),
 
             _recommendedLawyers(),
+            const SizedBox(height: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: primaryDark,
+        letterSpacing: 0.5,
       ),
     );
   }
@@ -63,22 +66,10 @@ class ServiceCategoryScreen extends StatelessWidget {
   // ================= SUB SERVICES =================
   Widget _subServicesGrid(BuildContext context) {
     final services = [
-      {
-        'title': 'Business Setup',
-        'icon': 'assets/images/b1.png',
-      },
-      {
-        'title': 'Documentation',
-        'icon': 'assets/images/b2.png',
-      },
-      {
-        'title': 'Disputes',
-        'icon': 'assets/images/b3.png',
-      },
-      {
-        'title': 'Legal Aid',
-        'icon': 'assets/images/b4.png',
-      },
+      {'title': 'Business Setup', 'icon': 'assets/images/b1.png'},
+      {'title': 'Documentation', 'icon': 'assets/images/b2.png'},
+      {'title': 'Disputes', 'icon': 'assets/images/b3.png'},
+      {'title': 'Legal Aid', 'icon': 'assets/images/b4.png'},
     ];
 
     return GridView.builder(
@@ -87,45 +78,45 @@ class ServiceCategoryScreen extends StatelessWidget {
       itemCount: services.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.9,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.85,
       ),
       itemBuilder: (context, i) {
         final title = services[i]['title'] as String;
 
         return InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
             if (title == 'Documentation') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentationScreen(),
-                ),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentationScreen()));
             }
           },
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  services[i]['icon'] as String,
-                  height: 36,
-                ),
-                const SizedBox(height: 8),
+                Image.asset(services[i]['icon'] as String, height: 40),
+                const SizedBox(height: 10),
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
+                    color: primaryDark,
                   ),
                 ),
               ],
@@ -135,7 +126,6 @@ class ServiceCategoryScreen extends StatelessWidget {
       },
     );
   }
-
 
   Widget _recommendedLawyers() {
     return StreamBuilder<QuerySnapshot>(
@@ -149,14 +139,9 @@ class ServiceCategoryScreen extends StatelessWidget {
         }
 
         final lawyers = snapshot.data!.docs;
-
         if (lawyers.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'No lawyers available yet',
-              style: TextStyle(color: Colors.grey),
-            ),
+          return Center(
+            child: Text('No lawyers available yet', style: TextStyle(color: Colors.grey.shade400)),
           );
         }
 
@@ -168,72 +153,69 @@ class ServiceCategoryScreen extends StatelessWidget {
             crossAxisCount: 2,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
-            childAspectRatio: 0.7,
+            childAspectRatio: 0.75,
           ),
           itemBuilder: (_, i) {
             final data = lawyers[i].data() as Map<String, dynamic>;
-
             final name = data['name'] ?? 'Lawyer';
             final avatarUrl = data['avatarUrl'];
-            final int experience = (data['experience'] is int)
-                ? data['experience']
-                : 0;
-
+            final int experience = (data['experience'] is int) ? data['experience'] : 0;
 
             return Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
               ),
               child: Column(
                 children: [
-                  /// PROFILE IMAGE / INITIAL
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                       child: avatarUrl != null && avatarUrl != ''
-                          ? Image.network(
-                        avatarUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      )
+                          ? Image.network(avatarUrl, fit: BoxFit.cover, width: double.infinity)
                           : Container(
-                        color: Colors.blue,
+                        color: accentBlue.withValues(alpha: 0.1),
                         alignment: Alignment.center,
                         child: Text(
                           name[0].toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 42,
-                            color: Colors.white,
+                          style: TextStyle(
+                            fontSize: 40,
+                            color: accentBlue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
                   ),
-
-                  /// INFO
                   Padding(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDark),
                           textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '$experience+',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.work_history_outlined, size: 12, color: Colors.grey.shade400),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$experience+ Years',
+                              style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -247,30 +229,31 @@ class ServiceCategoryScreen extends StatelessWidget {
     );
   }
 
-  // ================= BOTTOM NAV =================
-
   Widget _bottomNav(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      onTap: (index) {
-        if (index == 2) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          );
-        }
-        if (index == 1) {
-        Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ClientDashboardScreen()),
-        );
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 0,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        selectedItemColor: accentBlue,
+        unselectedItemColor: Colors.grey.shade400,
+        onTap: (index) {
+          if (index == 2) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+          }
+          if (index == 1) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientDashboardScreen()));
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Explore'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
     );
   }
 }
