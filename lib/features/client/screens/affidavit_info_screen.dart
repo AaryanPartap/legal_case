@@ -11,14 +11,6 @@ class AffidavitInfoScreen extends StatelessWidget {
   // --- BARE ACTS SECTION ---
   final List<Map<String, String>> bareActs = const [
     {'name': 'Bhartiya Nyaya Sanhita 2023', 'file': 'Bhartiya Nyaya Sanhita 2023.pdf'},
-    {'name': 'Code of Civil Procedure 1908', 'file': 'Code of Civil procedure 1908.pdf'},
-    {'name': 'The Constitution of India', 'file': 'The constitution of india.pdf'},
-    {'name': 'Hindu Marriage Act 1955', 'file': 'The hindu marriage act 1955.pdf'},
-  ];
-
-  // --- UPDATED MISC. FORMS SECTION ---
-  final List<Map<String, String>> miscForms = const [
-    {'name': 'Bhartiya Nyaya Sanhita 2023', 'file': 'Bhartiya Nyaya Sanhita 2023.pdf'},
     {'name': 'Bhartiya Sakshya Adhiniyam 2023', 'file': 'Bhartiya Sakshya Adhiniyam 2023.pdf'},
     {'name': 'Code of Civil procedure 1908', 'file': 'Code of Civil procedure 1908.pdf'},
     {'name': 'Code of Criminal procedure act 1973', 'file': 'Code of Criminal procedure act 1973.pdf'},
@@ -44,6 +36,15 @@ class AffidavitInfoScreen extends StatelessWidget {
     {'name': 'The guardian and wards act 1890', 'file': 'The guardian and wards act 1890.pdf'},
     {'name': 'The Hindu adoption and maintenance ac...', 'file': 'The Hindu adoption and maintenance ac....pdf'},
     {'name': 'The hindu marriage act 1955', 'file': 'The hindu marriage act 1955.pdf'},
+
+
+  ];
+
+  // --- UPDATED MISC. FORMS SECTION ---
+  final List<Map<String, String>> miscForms = const [
+    {'name': 'Address Form', 'file': 'Address Form.pdf'},
+    {'name': 'Affidavit Form Convict', 'file': 'Affidavit Form Convict.pdf'},
+    {'name': 'Annexure B for Bail Bond', 'file': 'Annexure B form Bail Bond.pdf'},
   ];
 
   // ✅ REDUNDANT _handleAction REMOVED FROM HERE TO FIX ERRORS
@@ -84,7 +85,7 @@ class AffidavitInfoScreen extends StatelessWidget {
         body: TabBarView(
           children: [
             _buildDocList(context, bareActs, "BareActs"),
-            _buildDocList(context, miscForms, "miscforms"),
+            _buildDocList(context, miscForms, "Miscforms"),
           ],
         ),
       ),
