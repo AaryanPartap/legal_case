@@ -11,7 +11,6 @@ class LawyerSignupScreen extends StatefulWidget {
 }
 
 class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
-  // ✅ Added Form Key for global validation
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nameController = TextEditingController();
@@ -21,7 +20,20 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   String? _selectedSpecialization;
+  String? _selectedCourtType;
+  String? _selectedState;
+  String? _selectedDistrict;
   bool _obscurePassword = true;
+
+  // ✅ Data for India (Expand these lists as needed)
+  final List<String> _states = ['Maharashtra', 'Delhi', 'Karnataka', 'Gujarat', 'Uttar Pradesh'];
+  final Map<String, List<String>> _districts = {
+    'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Thane'],
+    'Delhi': ['North Delhi', 'South Delhi', 'Central Delhi', 'West Delhi'],
+    'Karnataka': ['Bengaluru', 'Mysuru', 'Hubballi'],
+    'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara'],
+    'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Prayagraj'],
+  };
 
   @override
   void dispose() {
@@ -35,12 +47,12 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
 
   // ================= SIGNUP LOGIC =================
   Future<void> _handleSignup() async {
-    // ✅ Trigger professional validation check
     if (!_formKey.currentState!.validate()) {
-      return; // Stop execution if form is invalid
+      return;
     }
 
     try {
+      // ✅ Using the updated AuthService with location & status variables
       await AuthService().signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -48,20 +60,29 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
         name: _nameController.text.trim(),
         barCouncilId: _barIdController.text.trim(),
         specialization: _selectedSpecialization,
+        courtType: _selectedCourtType,
+        state: _selectedState,
+        district: _selectedDistrict,
       );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lawyer signup successful')),
+        const SnackBar(
+          content: Text('Registration submitted. Profile under review.'),
+          backgroundColor: Colors.orange,
+        ),
       );
 
+      // Redirect to login; the home screen will handle the "Hold" state via StreamBuilder
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LawyerLoginScreen()),
       );
     } on FirebaseAuthException catch (e) {
       _showError(e.message ?? 'Signup failed');
+    } catch (e) {
+      _showError('An unexpected error occurred');
     }
   }
 
@@ -73,7 +94,7 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form( // ✅ Wrap inputs in a Form widget
+          child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,23 +106,22 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 Center(
                   child: Image.asset(
                     'assets/images/client_signup.png',
-                    height: 160,
+                    height: 140,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 const Center(
                   child: Text(
                     'Lawyer Sign Up',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-                // Name Field with Length Constraint
                 _inputField(
                   hint: 'Full Name',
                   controller: _nameController,
@@ -113,7 +133,6 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Email Field with Regex Validation
                 _inputField(
                   hint: 'Email',
                   controller: _emailController,
@@ -127,9 +146,8 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Bar ID Field
                 _inputField(
-                  hint: 'Bar Council ID',
+                  hint: 'Bar Council ID (e.g., MAH/123/2023)',
                   controller: _barIdController,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return 'Bar Council ID is required';
@@ -138,33 +156,52 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Specialization with Null Check
-                DropdownButtonFormField<String>(
-                  value: _selectedSpecialization,
-                  items: const [
-                    DropdownMenuItem(value: 'criminal', child: Text('Criminal Lawyer')),
-                    DropdownMenuItem(value: 'civil', child: Text('Civil Lawyer')),
-                    DropdownMenuItem(value: 'corporate', child: Text('Corporate Lawyer')),
-                    DropdownMenuItem(value: 'Public', child: Text('Public Lawyer')),
-                    DropdownMenuItem(value: 'Immigration', child: Text('Immigration Lawyer')),
-                    DropdownMenuItem(value: 'Property', child: Text('Property Lawyer')),
-                  ],
-                  onChanged: (v) => setState(() => _selectedSpecialization = v),
-                  validator: (value) => value == null ? 'Please select a specialization' : null,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    labelText: 'Specialization',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  ),
+                // Court Type Dropdown
+                _dropdownField(
+                  label: 'Court Type',
+                  value: _selectedCourtType,
+                  items: ['Supreme Court', 'High Court', 'District Court'],
+                  onChanged: (v) => setState(() {
+                    _selectedCourtType = v;
+                    _selectedState = null;
+                    _selectedDistrict = null;
+                  }),
                 ),
                 const SizedBox(height: 16),
 
-                // Password with Complexity Constraint
+                // State Dropdown (Shown for High & District Courts)
+                if (_selectedCourtType == 'High Court' || _selectedCourtType == 'District Court') ...[
+                  _dropdownField(
+                    label: 'Select State',
+                    value: _selectedState,
+                    items: _states,
+                    onChanged: (v) => setState(() {
+                      _selectedState = v;
+                      _selectedDistrict = null;
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // District Dropdown (Only for District Court)
+                if (_selectedCourtType == 'District Court' && _selectedState != null) ...[
+                  _dropdownField(
+                    label: 'Select District',
+                    value: _selectedDistrict,
+                    items: _districts[_selectedState!] ?? [],
+                    onChanged: (v) => setState(() => _selectedDistrict = v),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                _dropdownField(
+                  label: 'Specialization',
+                  value: _selectedSpecialization,
+                  items: ['Criminal', 'Civil', 'Corporate', 'Public', 'Immigration', 'Property'],
+                  onChanged: (v) => setState(() => _selectedSpecialization = v),
+                ),
+                const SizedBox(height: 16),
+
                 _inputField(
                   hint: 'Password',
                   controller: _passwordController,
@@ -178,7 +215,6 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Confirm Password Check
                 _inputField(
                   hint: 'Confirm Password',
                   controller: _confirmPasswordController,
@@ -207,7 +243,7 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -216,20 +252,20 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
     );
   }
 
-  // ================= UPDATED INPUT FIELD =================
+  // ================= REUSABLE WIDGETS =================
   Widget _inputField({
     required String hint,
     required TextEditingController controller,
     bool isPassword = false,
     TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator, // ✅ Added Validator parameter
+    String? Function(String?)? validator,
     VoidCallback? toggle,
   }) {
-    return TextFormField( // ✅ Transitioned to TextFormField
+    return TextFormField(
       controller: controller,
       obscureText: isPassword ? _obscurePassword : false,
       keyboardType: keyboardType,
-      validator: validator, // ✅ Attached professional validation logic
+      validator: validator,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -245,16 +281,31 @@ class _LawyerSignupScreenState extends State<LawyerSignupScreen> {
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
         ),
-        // Error styling for professional appearance
         errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
-        focusedErrorBorder: OutlineInputBorder(
+      ),
+    );
+  }
+
+  Widget _dropdownField({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: onChanged,
+      validator: (v) => v == null ? 'Selection required' : null,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        labelText: label,
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderSide: BorderSide.none,
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     );
   }

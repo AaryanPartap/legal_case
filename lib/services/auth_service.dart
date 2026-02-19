@@ -6,16 +6,18 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ================= SIGN UP =================
+  // Update your signUp method in AuthService.dart
   Future<void> signUp({
     required String email,
     required String password,
-    required String role, // client | lawyer
+    required String role,
     required String name,
-
-    // lawyer-only
     String? specialization,
     String? barCouncilId,
-    int? experience,
+    // New Fields
+    String? courtType,
+    String? state,
+    String? district,
   }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -24,27 +26,26 @@ class AuthService {
 
     final uid = credential.user!.uid;
 
-    /// ✅ IMPORTANT FIX HERE
     final Map<String, dynamic> userData = {
       'uid': uid,
       'email': email,
       'name': name,
       'role': role,
       'avatarInitial': name.isNotEmpty ? name[0].toUpperCase() : 'U',
-      // ✅ ADD THESE DEFAULTS
-      'cases': 0,
-      'rating': 0.0,
-      'about': '',
       'createdAt': FieldValue.serverTimestamp(),
+      // ✅ NEW: Verification status
+      'status': role == 'lawyer' ? 'pending' : 'verified',
+      'isVerified': false,
     };
 
-    /// 👨‍⚖️ lawyer-specific fields
     if (role == 'lawyer') {
       userData.addAll({
-        'specialization': specialization ?? '', // avoid null
+        'specialization': specialization ?? '',
         'barCouncilId': barCouncilId ?? '',
-        'experience': experience ?? 0,
-        'verified': false,
+        'courtType': courtType ?? '',
+        'state': state ?? '',
+        'district': district ?? '',
+        'experience': 0,
       });
     }
 

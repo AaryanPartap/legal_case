@@ -3,7 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:legal_case_manager/features/auth/screens/entry_choice_screen.dart';
 import 'package:legal_case_manager/features/lawyer/screens/lawyer_dashboard.dart';
 import 'package:legal_case_manager/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ Add this
 import 'package:legal_case_manager/services/google_auth_service.dart';
+import 'package:legal_case_manager/features/auth/screens/lawyer_verification_screen.dart';
+import 'package:legal_case_manager/features/auth/screens/lawyer_home_wrapper.dart';
+
 
 class LawyerLoginScreen extends StatefulWidget {
   const LawyerLoginScreen({super.key});
@@ -27,6 +31,8 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
   }
 
   // ================= EMAIL LOGIN =================
+  // ================= EMAIL LOGIN =================
+  // ================= EMAIL LOGIN =================
   Future<void> _handleEmailLogin() async {
     try {
       final user = await AuthService().loginWithEmail(
@@ -34,30 +40,26 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
         password: _passwordController.text.trim(),
       );
 
+      // Fetch role once to ensure it's a lawyer
       final role = await AuthService().getUserRole(user.uid);
 
       if (!mounted) return;
 
       if (role == 'lawyer') {
+        // ✅ NAVIGATE TO WRAPPER: Let the StreamBuilder handle dynamic status
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const LawyerDashboardScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
         );
       } else {
         _showError('This account is not a lawyer account');
       }
     } on FirebaseAuthException catch (e) {
-      _showError(e.code == 'wrong-password'
-          ? 'Incorrect password'
-          : 'Login failed');
+      _showError(e.code == 'wrong-password' ? 'Incorrect password' : 'Login failed');
     }
   }
 
-
-
-  // ================= GOOGLE LOGIN =================
+// ================= GOOGLE LOGIN =================
   Future<void> _handleGoogleLogin() async {
     setState(() => _loading = true);
 
@@ -70,20 +72,58 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
           role: 'lawyer',
         );
 
+        if (!mounted) return;
+
+        // ✅ NAVIGATE TO WRAPPER: Automatically switches UI when verified
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const LawyerDashboardScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
         );
       }
-
     } catch (_) {
       _showError('Google Sign-In failed');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+// // ================= GOOGLE LOGIN =================
+//   Future<void> _handleGoogleLogin() async {
+//     setState(() => _loading = true);
+//
+//     try {
+//       final user = await GoogleAuthService().signInWithGoogle();
+//
+//       if (user != null) {
+//         await AuthService().saveGoogleUserIfNew(
+//           user: user,
+//           role: 'lawyer',
+//         );
+//
+//         // Re-fetch document to check status for existing/new users
+//         final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+//         final status = userDoc['status'] ?? 'pending';
+//
+//         if (!mounted) return;
+//
+//         if (status == 'verified') {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => const LawyerDashboardScreen()),
+//           );
+//         } else {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => const LawyerVerificationScreen()),
+//           );
+//         }
+//       }
+//     } catch (_) {
+//       _showError('Google Sign-In failed');
+//     } finally {
+//       if (mounted) setState(() => _loading = false);
+//     }
+//   }
 
   // ================= FORGOT PASSWORD =================
   Future<void> _forgotPassword() async {
