@@ -6,6 +6,7 @@ import 'package:legal_case_manager/features/auth/screens/entry_choice_screen.dar
 import 'package:legal_case_manager/features/client/screens/client_dashboard.dart';
 import 'package:legal_case_manager/services/auth_service.dart';
 import 'package:legal_case_manager/services/google_auth_service.dart';
+import 'package:legal_case_manager/features/auth/screens/client_signup_screen.dart';
 
 class ClientLoginScreen extends StatefulWidget {
   const ClientLoginScreen({super.key});
@@ -60,27 +61,44 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
 
 
   // ================= GOOGLE LOGIN =================
+  // lib/features/auth/screens/client_login_screen.dart
+
   Future<void> _handleGoogleLogin() async {
     setState(() => _loading = true);
 
     try {
-      final user = await GoogleAuthService().signInWithGoogle();
+      final user = await google_auth.GoogleAuthService().signInWithGoogle();
 
       if (user != null) {
-        await AuthService().saveGoogleUserIfNew(
-          user: user,
-          role: 'client',
-        );
+        // ✅ Check if the user document already exists in Firestore
+        final bool exists = await AuthService().userDocumentExists(user.uid);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const ClientDashboardScreen(),
-          ),
-        );
+        if (exists) {
+          // User exists, save any updated Google info and go to dashboard
+          await AuthService().saveGoogleUserIfNew(
+            user: user,
+            role: 'client',
+          );
+
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const ClientDashboardScreen()),
+          );
+        } else {
+          // ❌ User does not exist, sign them out of Firebase and redirect to Signup
+          await google_auth.GoogleAuthService().signOut();
+
+          if (!mounted) return;
+          _showError('No account found. Please sign up first.');
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ClientSignupScreen()),
+          );
+        }
       }
-
-    } catch (_) {
+    } catch (e) {
       _showError('Google Sign-In failed');
     } finally {
       if (mounted) setState(() => _loading = false);

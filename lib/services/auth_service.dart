@@ -77,6 +77,12 @@ class AuthService {
     return doc['role'] as String;
   }
 
+
+  Future<bool> userDocumentExists(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    return doc.exists;
+  }
+
   // ================= GOOGLE LOGIN =================
   Future<void> saveGoogleUserIfNew({
     required User user,
