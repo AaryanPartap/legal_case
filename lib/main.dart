@@ -20,6 +20,13 @@ void main() async {
   await NotificationService.init(navigatorKey);
 
   runApp(const LegalCaseApp());
+
+  // lib/main.dart updates
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug,
+    // ✅ Add this for Web/Vercel support
+    webProvider: ReCaptchaV3Provider('YOUR_RECAPTCHA_V3_SITE_KEY'),
+  );
 }
 
 //AIzaSyApzHnlbeLUdeszhvvyhZ3NYlCOKY53U38
