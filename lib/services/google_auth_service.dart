@@ -6,21 +6,21 @@ class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Future<User?> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser =
-    await _googleSignIn.signIn();
+    // Force the account picker to show every time
+    await _googleSignIn.signOut();
+    
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
     if (googleUser == null) return null;
 
-    final GoogleSignInAuthentication googleAuth =
-    await googleUser.authentication;
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
     final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    final UserCredential userCredential =
-    await _auth.signInWithCredential(credential);
+    final UserCredential userCredential = await _auth.signInWithCredential(credential);
 
     return userCredential.user;
   }

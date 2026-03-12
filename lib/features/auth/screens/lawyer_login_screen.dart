@@ -49,10 +49,13 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
           MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
         );
       } else {
-        _showError('This account is not a lawyer account');
+        await FirebaseAuth.instance.signOut();
+        _showError('This account is registered as a $role. Please use the correct login portal.');
       }
     } on FirebaseAuthException catch (e) {
       _showError(e.code == 'wrong-password' ? 'Incorrect password' : 'Login failed');
+    } catch (e) {
+      _showError(e.toString());
     }
   }
 
@@ -72,11 +75,16 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
           await GoogleAuthService().signOut();
 
           if (!mounted) return;
-          _showError('No account found for this Google email. Please sign up first.');
-          
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const LawyerSignupScreen()),
+
+          _showWarningDialog(
+            title: 'No Account Found',
+            message: 'This Google email is not registered yet. Please sign up first.',
+            onConfirm: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LawyerSignupScreen()),
+              );
+            },
           );
           return;
         }
@@ -91,12 +99,13 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
             MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
           );
         } else {
+          // Registered with a different role
           await GoogleAuthService().signOut();
-          _showError('This account is not a lawyer account');
+          _showError('This email is already registered as a $role. Please use the ${role[0].toUpperCase()}${role.substring(1)} portal.');
         }
       }
     } catch (e) {
-      _showError('Google Sign-In failed');
+      _showError('Google Sign-In failed: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -109,13 +118,18 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
       return;
     }
 
-    await FirebaseAuth.instance.sendPasswordResetEmail(
-      email: _emailController.text.trim(),
-    );
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Password reset email sent')),
-    );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset email sent')),
+      );
+    } catch (e) {
+      _showError('Failed to send reset email');
+    }
   }
 
   // ================= UI =================
@@ -308,6 +322,33 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWarningDialog({
+    required String title,
+    required String message,
+    required VoidCallback onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onConfirm();
+            },
+            child: const Text('Sign Up'),
           ),
         ],
       ),
