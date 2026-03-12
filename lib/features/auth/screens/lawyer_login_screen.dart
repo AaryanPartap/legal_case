@@ -3,10 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:legal_case_manager/features/auth/screens/entry_choice_screen.dart';
 import 'package:legal_case_manager/features/lawyer/screens/lawyer_dashboard.dart';
 import 'package:legal_case_manager/services/auth_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ Add this
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:legal_case_manager/services/google_auth_service.dart';
 import 'package:legal_case_manager/features/auth/screens/lawyer_verification_screen.dart';
 import 'package:legal_case_manager/features/auth/screens/lawyer_home_wrapper.dart';
+import 'package:legal_case_manager/features/auth/screens/lawyer_signup_screen.dart';
 
 
 class LawyerLoginScreen extends StatefulWidget {
@@ -31,8 +32,6 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
   }
 
   // ================= EMAIL LOGIN =================
-  // ================= EMAIL LOGIN =================
-  // ================= EMAIL LOGIN =================
   Future<void> _handleEmailLogin() async {
     try {
       final user = await AuthService().loginWithEmail(
@@ -40,13 +39,11 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // Fetch role once to ensure it's a lawyer
       final role = await AuthService().getUserRole(user.uid);
 
       if (!mounted) return;
 
       if (role == 'lawyer') {
-        // ✅ NAVIGATE TO WRAPPER: Let the StreamBuilder handle dynamic status
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
@@ -67,63 +64,43 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
       final user = await GoogleAuthService().signInWithGoogle();
 
       if (user != null) {
-        await AuthService().saveGoogleUserIfNew(
-          user: user,
-          role: 'lawyer',
-        );
+        // ✅ Check if user exists in Firestore
+        final exists = await AuthService().checkIfUserExists(user.uid);
+
+        if (!exists) {
+          // If user doesn't exist, they MUST sign up first
+          await GoogleAuthService().signOut();
+
+          if (!mounted) return;
+          _showError('No account found for this Google email. Please sign up first.');
+          
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LawyerSignupScreen()),
+          );
+          return;
+        }
+
+        final role = await AuthService().getUserRole(user.uid);
 
         if (!mounted) return;
 
-        // ✅ NAVIGATE TO WRAPPER: Automatically switches UI when verified
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
-        );
+        if (role == 'lawyer') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LawyerHomeWrapper()),
+          );
+        } else {
+          await GoogleAuthService().signOut();
+          _showError('This account is not a lawyer account');
+        }
       }
-    } catch (_) {
+    } catch (e) {
       _showError('Google Sign-In failed');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
-
-// // ================= GOOGLE LOGIN =================
-//   Future<void> _handleGoogleLogin() async {
-//     setState(() => _loading = true);
-//
-//     try {
-//       final user = await GoogleAuthService().signInWithGoogle();
-//
-//       if (user != null) {
-//         await AuthService().saveGoogleUserIfNew(
-//           user: user,
-//           role: 'lawyer',
-//         );
-//
-//         // Re-fetch document to check status for existing/new users
-//         final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-//         final status = userDoc['status'] ?? 'pending';
-//
-//         if (!mounted) return;
-//
-//         if (status == 'verified') {
-//           Navigator.pushReplacement(
-//             context,
-//             MaterialPageRoute(builder: (_) => const LawyerDashboardScreen()),
-//           );
-//         } else {
-//           Navigator.pushReplacement(
-//             context,
-//             MaterialPageRoute(builder: (_) => const LawyerVerificationScreen()),
-//           );
-//         }
-//       }
-//     } catch (_) {
-//       _showError('Google Sign-In failed');
-//     } finally {
-//       if (mounted) setState(() => _loading = false);
-//     }
-//   }
 
   // ================= FORGOT PASSWORD =================
   Future<void> _forgotPassword() async {
@@ -200,7 +177,6 @@ class _LawyerLoginScreenState extends State<LawyerLoginScreen> {
                 },
               ),
 
-              /// FORGOT PASSWORD
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(

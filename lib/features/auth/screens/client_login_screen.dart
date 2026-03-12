@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../services/auth_service.dart'; // For Email Signup
-import '../../../services/google_auth_service.dart' as google_auth; // For Google
+import '../../../services/auth_service.dart';
+import '../../../services/google_auth_service.dart';
 import 'package:legal_case_manager/features/auth/screens/entry_choice_screen.dart';
 import 'package:legal_case_manager/features/client/screens/client_dashboard.dart';
-import 'package:legal_case_manager/services/auth_service.dart';
-import 'package:legal_case_manager/services/google_auth_service.dart';
+import 'package:legal_case_manager/features/auth/screens/client_signup_screen.dart';
 
 class ClientLoginScreen extends StatefulWidget {
   const ClientLoginScreen({super.key});
@@ -57,8 +56,6 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
     }
   }
 
-
-
   // ================= GOOGLE LOGIN =================
   Future<void> _handleGoogleLogin() async {
     setState(() => _loading = true);
@@ -67,20 +64,40 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
       final user = await GoogleAuthService().signInWithGoogle();
 
       if (user != null) {
-        await AuthService().saveGoogleUserIfNew(
-          user: user,
-          role: 'client',
-        );
+        // ✅ Check if user exists in Firestore
+        final exists = await AuthService().checkIfUserExists(user.uid);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const ClientDashboardScreen(),
-          ),
-        );
+        if (!exists) {
+          // If user doesn't exist, they MUST sign up first
+          await GoogleAuthService().signOut(); // Optional: clean up session
+
+          if (!mounted) return;
+          _showError('No account found for this Google email. Please sign up first.');
+          
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ClientSignupScreen()),
+          );
+          return;
+        }
+
+        final role = await AuthService().getUserRole(user.uid);
+
+        if (!mounted) return;
+
+        if (role == 'client') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ClientDashboardScreen(),
+            ),
+          );
+        } else {
+          await GoogleAuthService().signOut();
+          _showError('This account is not a client account');
+        }
       }
-
-    } catch (_) {
+    } catch (e) {
       _showError('Google Sign-In failed');
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -114,22 +131,20 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               children: [
-                /// BACK BUTTON
-              Align(
-              alignment: Alignment.centerLeft,
-              child:
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const EntryChoiceScreen(),
-                      ),
-                    );
-                  },
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EntryChoiceScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
 
                 const SizedBox(height: 20),
 
@@ -141,7 +156,7 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
                 const SizedBox(height: 24),
 
                 const Text(
-                  'Login',
+                  'Client Login',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
 
@@ -162,7 +177,6 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
                   },
                 ),
 
-                /// FORGOT PASSWORD
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -199,7 +213,6 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
     );
   }
 
-  // ================= WIDGETS =================
   Widget _inputField({
     required String hint,
     required TextEditingController controller,

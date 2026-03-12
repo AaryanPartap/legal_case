@@ -6,7 +6,6 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ================= SIGN UP =================
-  // Update your signUp method in AuthService.dart
   Future<void> signUp({
     required String email,
     required String password,
@@ -14,7 +13,6 @@ class AuthService {
     required String name,
     String? specialization,
     String? barCouncilId,
-    // New Fields
     String? courtType,
     String? state,
     String? district,
@@ -33,7 +31,6 @@ class AuthService {
       'role': role,
       'avatarInitial': name.isNotEmpty ? name[0].toUpperCase() : 'U',
       'createdAt': FieldValue.serverTimestamp(),
-      // ✅ NEW: Verification status
       'status': role == 'lawyer' ? 'pending' : 'verified',
       'isVerified': false,
     };
@@ -57,8 +54,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final credential =
-    await _auth.signInWithEmailAndPassword(
+    final credential = await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -67,47 +63,54 @@ class AuthService {
 
   // ================= ROLE FETCH =================
   Future<String> getUserRole(String uid) async {
-    final doc =
-    await _firestore.collection('users').doc(uid).get();
-
+    final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists) {
       throw Exception('User profile not found');
     }
-
     return doc['role'] as String;
   }
 
-  // ================= GOOGLE LOGIN =================
-  Future<void> saveGoogleUserIfNew({
+  // ================= CHECK USER EXISTS =================
+  Future<bool> checkIfUserExists(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    return doc.exists;
+  }
+
+  // ================= GOOGLE SAVE/SIGNUP =================
+  Future<void> saveGoogleUser({
     required User user,
     required String role,
     String? specialization,
+    String? barCouncilId,
+    String? courtType,
+    String? state,
+    String? district,
   }) async {
     final ref = _firestore.collection('users').doc(user.uid);
-    final doc = await ref.get();
+    
+    final name = user.displayName ?? 'User';
+    final Map<String, dynamic> data = {
+      'uid': user.uid,
+      'email': user.email,
+      'name': name,
+      'avatarInitial': name.isNotEmpty ? name[0].toUpperCase() : 'U',
+      'role': role,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': role == 'lawyer' ? 'pending' : 'verified',
+      'isVerified': false,
+    };
 
-    if (!doc.exists) {
-      final name = user.displayName ?? 'User';
-
-      /// ✅ SAME FIX HERE
-      final Map<String, dynamic> data = {
-        'uid': user.uid,
-        'email': user.email,
-        'name': name,
-        'avatarInitial': name[0].toUpperCase(),
-        'role': role,
-        'createdAt': FieldValue.serverTimestamp(),
-      };
-
-      if (role == 'lawyer') {
-        data.addAll({
-          'specialization': specialization ?? '',
-          'verified': false,
-          'experience': 0,
-        });
-      }
-
-      await ref.set(data);
+    if (role == 'lawyer') {
+      data.addAll({
+        'specialization': specialization ?? '',
+        'barCouncilId': barCouncilId ?? '',
+        'courtType': courtType ?? '',
+        'state': state ?? '',
+        'district': district ?? '',
+        'experience': 0,
+      });
     }
+
+    await ref.set(data);
   }
 }
